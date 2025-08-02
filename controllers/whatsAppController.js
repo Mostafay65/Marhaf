@@ -16,13 +16,25 @@ export const initializeSession = catchAsync(async (req, res, next) => {
 });
 
 export const sendMessage = catchAsync(async (req, res, next) => {
-    const { phoneNumber, otp } = req.body;
-    
-    if (!phoneNumber || !otp) {
-        return next(new appError("Phone number and OTP are required.", 400));
+    const { phoneNumber, otp, message } = req.body;
+
+    if (!phoneNumber) {
+        return next(new appError("Phone number is required.", 400));
     }
 
-    await whatsAppService.sendMessage(phoneNumber, otp);
+    if (message) {
+        await whatsAppService.sendMessage(phoneNumber, message);
+        return res.status(200).json({
+            status: httpStatusText.SUCCESS,
+            message: `Message sent successfully. "${message}"`,
+        });
+    }
+
+    if (!otp) {
+        return next(new appError("OTP is required.", 400));
+    }
+
+    await whatsAppService.sendMessage(phoneNumber, `Your OTP for Marhaf Application: ${otp}`);
 
     res.status(200).json({
         status: httpStatusText.SUCCESS,
